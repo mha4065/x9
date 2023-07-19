@@ -286,12 +286,21 @@ if args.list != '':
         for payload in args.value:
             values.append(payload)
                         
+        lines = []           
         if args.parameters != "":
-            wordlists = file_to_list(args.parameters, args.chunk)
-        else:
-            wordlists = []
+            with open(args.parameters, 'r') as file:
+                lines = file.readlines()
 
-        generators(complete_urls, values, wordlists)
+            lines = [line.replace('\n', '') for line in lines]
+
+            start = 0
+            end = len(lines)
+            step = args.chunk
+            for i in range(start, end, step):
+                x = i
+                generators(complete_urls, values, lines[x:x+step])
+        else:
+            generators(complete_urls, values, lines)
 
         if len(results) > 0:
             results = list(set(results))
@@ -322,13 +331,24 @@ elif args.url != '':
         values = []
         for payload in args.value:
             values.append(payload)
-                        
-        if args.parameters != "":
-            wordlists = file_to_list(args.parameters, args.chunk)
-        else:
-            wordlists = []
 
-        generators(complete_urls, values, wordlists)
+        lines = []           
+        if args.parameters != "":
+            
+            with open(args.parameters, 'r') as file:
+                lines = file.readlines()
+
+            lines = [line.replace('\n', '') for line in lines]
+
+            start = 0
+            end = len(lines)
+            step = args.chunk
+            for i in range(start, end, step):
+                x = i
+                generators(complete_urls, values, lines[x:x+step])
+        else:
+            generators(complete_urls, values, lines)
+        
 
         if len(results) > 0:
             results = list(set(results))
@@ -368,12 +388,21 @@ else:
                     for payload in args.value:
                         values.append(payload)
                     
+                    lines = []           
                     if args.parameters != "":
-                        wordlists = file_to_list(args.parameters, args.chunk)
-                    else:
-                        wordlists = []
+                        with open(args.parameters, 'r') as file:
+                            lines = file.readlines()
 
-                    generators(complete_urls, values, wordlists)
+                        lines = [line.replace('\n', '') for line in lines]
+
+                        start = 0
+                        end = len(lines)
+                        step = args.chunk
+                        for i in range(start, end, step):
+                            x = i
+                            generators(complete_urls, values, lines[x:x+step])
+                    else:
+                        generators(complete_urls, values, lines)
 
                     if len(results) > 0:
                         results = list(set(results))
@@ -407,12 +436,21 @@ else:
                 for payload in args.value:
                     values.append(payload)
                     
+                lines = []           
                 if args.parameters != "":
-                    wordlists = file_to_list(args.parameters, args.chunk)
-                else:
-                    wordlists = []
+                    with open(args.parameters, 'r') as file:
+                        lines = file.readlines()
 
-                generators(complete_urls, values, wordlists)
+                    lines = [line.replace('\n', '') for line in lines]
+
+                    start = 0
+                    end = len(lines)
+                    step = args.chunk
+                    for i in range(start, end, step):
+                        x = i
+                        generators(complete_urls, values, lines[x:x+step])
+                else:
+                    generators(complete_urls, values, lines)
                         
                 if len(results) > 0:
                     results = list(set(results))
