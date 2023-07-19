@@ -30,6 +30,7 @@ x9 is a fuzzing tool to identify potentially vulnerable parameters in web applic
 - `-p` or `--parameters` : Parameter wordlist to fuzz
 - `-c` or `--chunk` : Chunk to fuzz the parameters. (default: 15)
 - `-v` or `--value` : Value for parameters to fuzz
+- `-vf` or `--value_file` : List of Values for parameters to fuzz
 - `-gs` or `--generate_strategy` : Select the mode strategy from the available choice (default all)
 	`normal` : Remove all parameters and put the wordlist
 	`combine` : Pitchfork combine on the existing parameters
@@ -89,7 +90,11 @@ https://domain.tld/?hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected
 https://domain.tld/?param1=value1&param2=%22mhainjected%22&hidden_param1=%22mhainjected%22&hidden_param1=%27mhainjected%27&hidden_param1=%3Cb%2Fmhainjected&hidden_param2=%22mhainjected%22&hidden_param2=%27mhainjected%27&hidden_param2=%3Cb%2Fmhainjected
 https://domain.tld/?param1=value1&param2=%27mhainjected%27&hidden_param1=%22mhainjected%22&hidden_param1=%27mhainjected%27&hidden_param1=%3Cb%2Fmhainjected&hidden_param2=%22mhainjected%22&hidden_param2=%27mhainjected%27&hidden_param2=%3Cb%2Fmhainjected
 https://domain.tld/?hidden_param1=%27mhainjected%27&hidden_param2=%27mhainjected%27
+```
 
+List of values as payload
+```
+./x9.py -u "https://domain.tld/?param1=value1&param2=value2" -vf values.txt -p parameters.txt -c 20
 ```
 
 Normal generation strategy

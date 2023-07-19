@@ -10,6 +10,7 @@ parser.add_argument('-l', '--list', nargs='?', type=str, default='', help="List 
 parser.add_argument('-p', '--parameters', nargs='?', type=str, default='', help="Parameter wordlist to fuzz")
 parser.add_argument('-c', '--chunk', type=int, default=15, help="Chunk to fuzz the parameters. [default: 15]")
 parser.add_argument('-v', '--value', action='append', help='Value for parameters to fuzz')
+parser.add_argument('-vf', '--value_file', nargs='?', type=str, default='', help="List of Values for parameters to fuzz")
 parser.add_argument('-gs', '--generate_strategy', choices=['normal', 'ignore', 'combine', 'all'], default='all', help="""Select the mode strategy from the available choice:
     normal: Remove all parameters and put the wordlist
     combine: Pitchfork combine on the existing parameters
@@ -36,7 +37,7 @@ if args.help:
     parser.print_help()
     sys.exit()
 
-if not args.value:
+if not args.value and not args.value_file:
     print()
     print(colors.RED + "Please enter your desired value as parameter value to fuzz !!!" + colors.NOCOLOR)
     print()
@@ -233,16 +234,6 @@ class Combine:
         except Exception as e:
             print(e)
 
-def file_to_list(filename, num_lines):
-    lines = []
-    with open(filename, 'r') as file:
-        for i in range(num_lines):
-            line = file.readline().strip()
-            if not line:
-                break
-            lines.append(line)
-    return lines
-
 results = []
 
 def generators(url, values, parameters):
@@ -281,10 +272,16 @@ if args.list != '':
                 complete_urls.append("https://{}".format(url))
             else:
                 complete_urls.append(url)
-        
+
         values = []
-        for payload in args.value:
-            values.append(payload)
+        if args.value_file:
+            with open(args.value_file, 'r') as file:
+                values = file.readlines()
+            values = [line.replace('\n', '') for line in values]
+
+        if args.value:
+            for payload in args.value:
+                values.append(payload)
                         
         lines = []           
         if args.parameters != "":
@@ -329,12 +326,17 @@ elif args.url != '':
             complete_urls.append(url)
 
         values = []
-        for payload in args.value:
-            values.append(payload)
+        if args.value_file:
+            with open(args.value_file, 'r') as file:
+                values = file.readlines()
+            values = [line.replace('\n', '') for line in values]
+
+        if args.value:
+            for payload in args.value:
+                values.append(payload)
 
         lines = []           
         if args.parameters != "":
-            
             with open(args.parameters, 'r') as file:
                 lines = file.readlines()
 
@@ -385,8 +387,14 @@ else:
                         complete_urls.append(url)
 
                     values = []
-                    for payload in args.value:
-                        values.append(payload)
+                    if args.value_file:
+                        with open(args.value_file, 'r') as file:
+                            values = file.readlines()
+                        values = [line.replace('\n', '') for line in values]
+
+                    if args.value:
+                        for payload in args.value:
+                            values.append(payload)
                     
                     lines = []           
                     if args.parameters != "":
@@ -433,8 +441,14 @@ else:
                     complete_urls.append(url)
             try:
                 values = []
-                for payload in args.value:
-                    values.append(payload)
+                if args.value_file:
+                    with open(args.value_file, 'r') as file:
+                        values = file.readlines()
+                    values = [line.replace('\n', '') for line in values]
+
+                if args.value:
+                    for payload in args.value:
+                        values.append(payload)
                     
                 lines = []           
                 if args.parameters != "":
