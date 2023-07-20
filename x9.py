@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser,RawTextHelpFormatter
-import sys
+import sys, tldextract
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 parser = ArgumentParser(add_help=False, formatter_class=RawTextHelpFormatter)
@@ -262,16 +262,52 @@ def generators(url, values, parameters):
             combine = Combine(url, values, parameters)
             combine.replace_mode()
 
+def clean_url(url):
+    full_url = ""
+    ext = tldextract.extract(url)
+
+    if ext.subdomain:
+        ext_url = ext.subdomain + '.' + ext.domain + '.' + ext.suffix
+    else:
+        ext_url = ext.domain + '.' + ext.suffix
+
+    if not url.startswith("http://") and not url.startswith("https://"):
+        full_url = "https://{}".format(url)
+    else:
+        full_url = url
+
+    if not "?" in full_url or not "%3F" in full_url or not "%3f" in full_url:
+        if 'https:' in full_url:
+            if full_url == 'https://'+ext_url:
+                if not full_url.endswith('/'):
+                    full_url = "{}/".format('https://'+ext_url)
+                else:
+                    pass
+            else:
+                pass
+        else:
+            if full_url == 'http://'+ext_url:
+                if not full_url.endswith('/'):
+                    full_url = "{}/".format('http://'+ext_url)
+                else:
+                    pass
+            else:
+                pass
+    else:
+        pass
+    return full_url
+
+
 if args.list != '':
     try:
         urls = [line.strip() for line in open(args.list)]
         urls = list(set(urls))
+
         complete_urls = []
+
         for url in urls:
-            if not url.startswith("http://") and not url.startswith("https://"):
-                complete_urls.append("https://{}".format(url))
-            else:
-                complete_urls.append(url)
+            full_url = clean_url(url)
+            complete_urls.append(full_url)
 
         values = []
         if args.value_file:
@@ -320,10 +356,8 @@ elif args.url != '':
     try:
         url = args.url
         complete_urls = []
-        if not url.startswith("http://") and not url.startswith("https://"):
-            complete_urls.append("https://{}".format(url))
-        else:
-            complete_urls.append(url)
+        full_url = clean_url(url)
+        complete_urls.append(full_url)
 
         values = []
         if args.value_file:
@@ -381,10 +415,8 @@ else:
                     if ',' in url:
                         url = url.split(',')[0]
 
-                    if not url.startswith("http://") and not url.startswith("https://"):
-                        complete_urls.append("https://{}".format(url))
-                    else:
-                        complete_urls.append(url)
+                    full_url = clean_url(url)
+                    complete_urls.append(full_url)
 
                     values = []
                     if args.value_file:
@@ -434,11 +466,11 @@ else:
         else:
             input_urls = list(set(input_urls))
             complete_urls = []
+            
             for url in input_urls:
-                if not url.startswith("http://") and not url.startswith("https://"):
-                    complete_urls.append("https://{}".format(url))
-                else:
-                    complete_urls.append(url)
+                full_url = clean_url(url)
+                complete_urls.append(full_url)
+
             try:
                 values = []
                 if args.value_file:
