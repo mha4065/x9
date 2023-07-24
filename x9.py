@@ -155,10 +155,11 @@ class Combine:
         for param in self.parameters:
             if param in query_params:
                 del query_params[param]
-        
-        for param in self.parameters:
-            query_params[param] = self.payload
-        
+
+        for pay in self.payload:
+            for param in self.parameters:
+                query_params[param] = pay
+
         encoded_params = urlencode(query_params, doseq=True)
         
         updated_url_parts = list(url_parts)
@@ -223,7 +224,6 @@ class Combine:
                     new_urls = []
                     parsed_url = urlparse(url)
                     query_params = parse_qs(parsed_url.query, keep_blank_values=True)
-
                     for key in query_params.keys():
                         for value in query_params[key]:
                             new_url = self.replace(url, value, payload)
@@ -255,12 +255,10 @@ def generators(url, values, parameters):
         normal.normal_mode()
         ignore = Ignore(url, values, parameters)
         ignore.ignore_mode()
-        if args.value_strategy == "suffix":
-            combine = Combine(url, values, parameters)
-            combine.suffix_mode()
-        else:
-            combine = Combine(url, values, parameters)
-            combine.replace_mode()
+        combine = Combine(url, values, parameters)
+        combine.suffix_mode()
+        combine = Combine(url, values, parameters)
+        combine.replace_mode()
 
 def clean_url(url):
     full_url = ""
