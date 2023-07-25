@@ -54,6 +54,8 @@ output
 https://domain.tld/?hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
 https://domain.tld/?param1=value1&param2=%22mhainjected%22&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
 https://domain.tld/?param1=%22mhainjected%22&param2=value2&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
+https://domain.tld/?param1=value1&param2=value2%22mhainjected%22&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
+https://domain.tld/?param1=value1%22mhainjected%22&param2=value2&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
 https://domain.tld/?param1=value1&param2=value2&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
 ```
 
@@ -61,35 +63,11 @@ List of URLs with all methods
 ```
 ./x9.py -l urls.txt -v '"mhainjected"' -p parameters.txt -c 20
 
-output
-https://domain.tld/path2/?param3=value3&param4=%22mhainjected%22&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
-https://domain.tld/path2/?param3=%22mhainjected%22&param4=value4&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
-https://domain.tld/path2/?param3=value3&param4=value4&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
-https://domain.tld/path1/?param1=value1&param2=%22mhainjected%22&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
-https://domain.tld/path1/?param1=%22mhainjected%22&param2=value2&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
-https://domain.tld/path2/?hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
-https://domain.tld/path1/?hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
-https://domain.tld/path1/?param1=value1&param2=value2&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
-
 ```
 
 Multiple value as payload
 ```
 ./x9.py -u "https://domain.tld/?param1=value1&param2=value2" -v '"mhainjected"' -v "'mhainjected'" -v '<b/mhainjected' -p parameters.txt -c 20
-
-output
-https://domain.tld/?param1=%22mhainjected%22&param2=value2&hidden_param1=%22mhainjected%22&hidden_param1=%27mhainjected%27&hidden_param1=%3Cb%2Fmhainjected&hidden_param2=%22mhainjected%22&hidden_param2=%27mhainjected%27&hidden_param2=%3Cb%2Fmhainjected
-https://domain.tld/?param1=%27mhainjected%27&param2=value2&hidden_param1=%22mhainjected%22&hidden_param1=%27mhainjected%27&hidden_param1=%3Cb%2Fmhainjected&hidden_param2=%22mhainjected%22&hidden_param2=%27mhainjected%27&hidden_param2=%3Cb%2Fmhainjected
-https://domain.tld/?param1=value1&param2=value2&hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
-https://domain.tld/?param1=value1&param2=%3Cb%2Fmhainjected&hidden_param1=%22mhainjected%22&hidden_param1=%27mhainjected%27&hidden_param1=%3Cb%2Fmhainjected&hidden_param2=%22mhainjected%22&hidden_param2=%27mhainjected%27&hidden_param2=%3Cb%2Fmhainjected
-https://domain.tld/?hidden_param1=%3Cb%2Fmhainjected&hidden_param2=%3Cb%2Fmhainjected
-https://domain.tld/?param1=value1&param2=value2&hidden_param1=%3Cb%2Fmhainjected&hidden_param2=%3Cb%2Fmhainjected
-https://domain.tld/?param1=%3Cb%2Fmhainjected&param2=value2&hidden_param1=%22mhainjected%22&hidden_param1=%27mhainjected%27&hidden_param1=%3Cb%2Fmhainjected&hidden_param2=%22mhainjected%22&hidden_param2=%27mhainjected%27&hidden_param2=%3Cb%2Fmhainjected
-https://domain.tld/?param1=value1&param2=value2&hidden_param1=%27mhainjected%27&hidden_param2=%27mhainjected%27
-https://domain.tld/?hidden_param1=%22mhainjected%22&hidden_param2=%22mhainjected%22
-https://domain.tld/?param1=value1&param2=%22mhainjected%22&hidden_param1=%22mhainjected%22&hidden_param1=%27mhainjected%27&hidden_param1=%3Cb%2Fmhainjected&hidden_param2=%22mhainjected%22&hidden_param2=%27mhainjected%27&hidden_param2=%3Cb%2Fmhainjected
-https://domain.tld/?param1=value1&param2=%27mhainjected%27&hidden_param1=%22mhainjected%22&hidden_param1=%27mhainjected%27&hidden_param1=%3Cb%2Fmhainjected&hidden_param2=%22mhainjected%22&hidden_param2=%27mhainjected%27&hidden_param2=%3Cb%2Fmhainjected
-https://domain.tld/?hidden_param1=%27mhainjected%27&hidden_param2=%27mhainjected%27
 ```
 
 List of values as payload
