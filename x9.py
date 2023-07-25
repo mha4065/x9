@@ -76,24 +76,34 @@ class Ignore:
         for param in self.parameters:
             if param in query_params:
                 del query_params[param]
+
+        start = 0
+        end = len(self.parameters)
+        step = args.chunk
+        for i in range(start, end, step):
+            x = i
         
-        for param in self.parameters:
-            query_params[param] = [payload]
+            for param in self.parameters[x:x+step]:
+                query_params[param] = [payload]
         
-        encoded_params = urlencode(query_params, doseq=True)
-        
-        updated_url_parts = list(url_parts)
-        updated_url_parts[4] = encoded_params
-        
-        return urlunparse(updated_url_parts)
+            encoded_params = urlencode(query_params, doseq=True)
+                
+            updated_url_parts = list(url_parts)
+            updated_url_parts[4] = encoded_params
+                
+            print(urlunparse(updated_url_parts))
+            if not args.output == '':
+                with open(args.output, 'a') as f:
+                    f.write(urlunparse(updated_url_parts)+'\n')
+            query_params.clear()
+            query_params = parse_qs(url_parts.query)
 
     def ignore_mode(self):
         try:
             if self.parameters:
                 for url in self.urls:
                     for payload in self.payload:
-                        url = self.update_url_parameters(url, payload)
-                        results.append(url)
+                        self.update_url_parameters(url, payload)
             else:
                 print()
                 print(colors.RED + "Please enter your parameter list as a text file !!!" + colors.NOCOLOR)
@@ -106,10 +116,10 @@ class Ignore:
             print(e)
 
 class Normal:
-    def __init__(self, urls, payload, wordlist=None):
+    def __init__(self, urls, payloads, parameters=None):
         self.urls = urls
-        self.payload = payload
-        self.wordlist = wordlist
+        self.payload = payloads
+        self.wordlist = parameters
 
     def replace_parameters(self, url, payload):
         parsed_url = urlparse(url)
@@ -121,116 +131,108 @@ class Normal:
             for param in query_params_copy.keys():
                 del query_params[param]
 
-            for param in self.wordlist:
-                query_params[param] = payload
+            start = 0
+            end = len(self.wordlist)
+            step = args.chunk
+            for i in range(start, end, step):
+                x = i
+                for param in self.wordlist[x:x+step]:
+                    query_params[param] = payload
+
+                new_query = urlencode(query_params, doseq=True)
+                new_parsed_url = parsed_url._replace(query=new_query)
+                new_url = urlunparse(new_parsed_url)
+
+                print(new_url)
+                if not args.output == '':
+                    with open(args.output, 'a') as f:
+                        f.write(new_url+'\n')
+                query_params.clear()
         else:
             for param in query_params:
                 query_params[param] = payload
 
-        new_query = urlencode(query_params, doseq=True)
-        new_parsed_url = parsed_url._replace(query=new_query)
-        new_url = urlunparse(new_parsed_url)
+            new_query = urlencode(query_params, doseq=True)
+            new_parsed_url = parsed_url._replace(query=new_query)
+            new_url = urlunparse(new_parsed_url)
 
-        return new_url
+            print(new_url)
+            if not args.output == '':
+                with open(args.output, 'a') as f:
+                    f.write(new_url+'\n')
     
     def normal_mode(self):
         try:
             for url in self.urls:
                 for payload in self.payload:
-                    new_url = self.replace_parameters(url, payload)
-                    results.append(new_url)
+                    self.replace_parameters(url, payload)
+
         except Exception as e:
             print(e)
 
 class Combine:
-    def __init__(self, urls, payload, wordlist=None):
+    def __init__(self, urls, payloads, parameters=None):
         self.urls = urls
-        self.payload = payload
-        self.parameters = wordlist
+        self.payload = payloads
+        self.parameters = parameters
 
-    def update_url_parameters(self, url):
-        url_parts = urlparse(url)
-        query_params = parse_qs(url_parts.query)
-        
-        for param in self.parameters:
-            if param in query_params:
-                del query_params[param]
+    def update_url_parameters(self, url, payload):
+        res = []
+        start = 0
+        end = len(self.parameters)
+        step = args.chunk
+        query_params = {}
+        query_params.clear()
+        for i in range(start, end, step):
+            url_parts = urlparse(url)
+            query_params = parse_qs(url_parts.query)
+            x = i
+            for param in self.parameters[x:x+step]:
+                query_params.update({param: payload})
+            res.append(query_params)
+            query_params = parse_qs(url_parts.query)
 
-        for pay in self.payload:
-            for param in self.parameters:
-                query_params[param] = pay
+            
+        for r in res:
+            encoded_params = urlencode(r, doseq=True)
+            updated_url_parts = list(url_parts)
+            updated_url_parts[4] = encoded_params
+            print(urlunparse(updated_url_parts))
 
-        encoded_params = urlencode(query_params, doseq=True)
-        
-        updated_url_parts = list(url_parts)
-        updated_url_parts[4] = encoded_params
-        
-        return urlunparse(updated_url_parts)
-
-    def suffix(self, url, param, payload):
+            if not args.output == '':
+                with open(args.output, 'a') as f:
+                    f.write(urlunparse(updated_url_parts)+'\n')
+                        
+            
+    def replace_suffix(self, url, param, payload):
         parsed_url = urlparse(url)
         query_params = parse_qs(parsed_url.query, keep_blank_values=True)
         
         for key, values in query_params.items():
             for i in range(len(values)):
-                if values[i] == param:
-                    values[i] = param + payload
+                if values[i] == param[0]:
+                    if args.value_strategy == "suffix":
+                        values[i] = param[0] + payload
+                    else:
+                        values[i] = payload
 
         new_query_string = urlencode(query_params, doseq=True)
 
         new_url = urlunparse(parsed_url._replace(query=new_query_string))
-        if self.parameters:
-            new_url = self.update_url_parameters(new_url)
-        return new_url
 
-    def suffix_mode(self):
+        if self.parameters:
+            for payload in self.payload:
+                self.update_url_parameters(new_url, payload)
+
+    def combine(self):
         try:
             for url in self.urls:
-                for payload in self.payload:
-                    new_urls = []
-                    parsed_url = urlparse(url)
-                    query_params = parse_qs(parsed_url.query, keep_blank_values=True)
+                parsed_url = urlparse(url)
+                query_params = parse_qs(parsed_url.query, keep_blank_values=True)
+                for keys,values in query_params.items():
+                    for payload in self.payload:
+                        self.replace_suffix(url, values, payload)
 
-                    for key in query_params.keys():
-                        for value in query_params[key]:
-                            new_url = self.suffix(url, value, payload)
-                            new_urls.append(new_url)
-
-                    for new_url in new_urls:
-                        results.append(new_url)
-        except Exception as e:
-            print(e)
-
-    def replace(self, url, param, payload):
-        parsed_url = urlparse(url)
-        query_params = parse_qs(parsed_url.query, keep_blank_values=True)
-        
-        for key, values in query_params.items():
-            for i in range(len(values)):
-                if values[i] == param:
-                    values[i] = payload
-
-        new_query_string = urlencode(query_params, doseq=True)
-
-        new_url = urlunparse(parsed_url._replace(query=new_query_string))
-        if self.parameters:
-            new_url = self.update_url_parameters(new_url)
-        return new_url
-
-    def replace_mode(self):
-        try:
-            for url in self.urls:
-                for payload in self.payload:
-                    new_urls = []
-                    parsed_url = urlparse(url)
-                    query_params = parse_qs(parsed_url.query, keep_blank_values=True)
-                    for key in query_params.keys():
-                        for value in query_params[key]:
-                            new_url = self.replace(url, value, payload)
-                            new_urls.append(new_url)
-
-                    for new_url in new_urls:
-                        results.append(new_url)
         except Exception as e:
             print(e)
 
@@ -244,21 +246,15 @@ def generators(url, values, parameters):
         ignore = Ignore(url, values, parameters)
         ignore.ignore_mode()
     elif args.generate_strategy == "combine":
-        if args.value_strategy == "suffix":
-            combine = Combine(url, values, parameters)
-            combine.suffix_mode()
-        else:
-            combine = Combine(url, values, parameters)
-            combine.replace_mode()
+        combine = Combine(url, values, parameters)
+        combine.combine()
     else:
         normal = Normal(url, values, parameters)
         normal.normal_mode()
         ignore = Ignore(url, values, parameters)
         ignore.ignore_mode()
         combine = Combine(url, values, parameters)
-        combine.suffix_mode()
-        combine = Combine(url, values, parameters)
-        combine.replace_mode()
+        combine.combine()
 
 def clean_url(url):
     full_url = ""
@@ -295,6 +291,34 @@ def clean_url(url):
         pass
     return full_url
 
+def get_payloads():
+    payloads = []
+    if args.value_file:
+        with open(args.value_file, 'r') as file:
+            payloads = file.readlines()
+        payloads = [line.replace('\n', '') for line in payloads]
+
+    if args.value:
+        for payload in args.value:
+            payloads.append(payload)
+
+    return payloads
+
+def get_parameters():
+    with open(args.parameters, 'r') as file:
+        parameters = file.readlines()
+    parameters = [line.replace('\n', '') for line in parameters]
+    return parameters
+
+def run(complete_urls):
+    payloads = get_payloads()
+                    
+    parameters = []           
+    if args.parameters != "":
+        parameters = get_parameters()
+        generators(complete_urls, payloads, parameters)
+    else:
+        generators(complete_urls, payloads, parameters)
 
 if args.list != '':
     try:
@@ -307,46 +331,8 @@ if args.list != '':
             full_url = clean_url(url)
             complete_urls.append(full_url)
 
-        values = []
-        if args.value_file:
-            with open(args.value_file, 'r') as file:
-                values = file.readlines()
-            values = [line.replace('\n', '') for line in values]
+        run(complete_urls)
 
-        if args.value:
-            for payload in args.value:
-                values.append(payload)
-                        
-        lines = []           
-        if args.parameters != "":
-            with open(args.parameters, 'r') as file:
-                lines = file.readlines()
-
-            lines = [line.replace('\n', '') for line in lines]
-
-            start = 0
-            end = len(lines)
-            step = args.chunk
-            for i in range(start, end, step):
-                x = i
-                generators(complete_urls, values, lines[x:x+step])
-        else:
-            generators(complete_urls, values, lines)
-
-        if len(results) > 0:
-            results = list(set(results))
-
-            # Output
-            if args.output == '':
-                for res in results:
-                    if res:
-                        print(res)
-            else:
-                for res in results:
-                    if res:
-                        print(res)
-                        with open(args.output, 'a') as f:
-                            f.write(res+'\n')
     except Exception as e:
         print(e)
     
@@ -357,49 +343,11 @@ elif args.url != '':
         full_url = clean_url(url)
         complete_urls.append(full_url)
 
-        values = []
-        if args.value_file:
-            with open(args.value_file, 'r') as file:
-                values = file.readlines()
-            values = [line.replace('\n', '') for line in values]
+        run(complete_urls)
 
-        if args.value:
-            for payload in args.value:
-                values.append(payload)
-
-        lines = []           
-        if args.parameters != "":
-            with open(args.parameters, 'r') as file:
-                lines = file.readlines()
-
-            lines = [line.replace('\n', '') for line in lines]
-
-            start = 0
-            end = len(lines)
-            step = args.chunk
-            for i in range(start, end, step):
-                x = i
-                generators(complete_urls, values, lines[x:x+step])
-        else:
-            generators(complete_urls, values, lines)
-        
-
-        if len(results) > 0:
-            results = list(set(results))
-
-            # Output
-            if args.output == '':
-                for res in results:
-                    if res:
-                        print(res)
-            else:
-                for res in results:
-                    if res:
-                        print(res)
-                        with open(args.output, 'a') as f:
-                            f.write(res+'\n')
     except Exception as e:
         print(e)
+
 else:
     if not sys.stdin.isatty():
         input_urls = [line.strip() for line in sys.stdin.readlines()]
@@ -416,100 +364,23 @@ else:
                     full_url = clean_url(url)
                     complete_urls.append(full_url)
 
-                    values = []
-                    if args.value_file:
-                        with open(args.value_file, 'r') as file:
-                            values = file.readlines()
-                        values = [line.replace('\n', '') for line in values]
-
-                    if args.value:
-                        for payload in args.value:
-                            values.append(payload)
+                    run(complete_urls)
                     
-                    lines = []           
-                    if args.parameters != "":
-                        with open(args.parameters, 'r') as file:
-                            lines = file.readlines()
-
-                        lines = [line.replace('\n', '') for line in lines]
-
-                        start = 0
-                        end = len(lines)
-                        step = args.chunk
-                        for i in range(start, end, step):
-                            x = i
-                            generators(complete_urls, values, lines[x:x+step])
-                    else:
-                        generators(complete_urls, values, lines)
-
-                    if len(results) > 0:
-                        results = list(set(results))
-
-                        # Output
-                        if args.output == '':
-                            for res in results:
-                                if res:
-                                    print(res)
-                        else:
-                            for res in results:
-                                if res:
-                                    print(res)
-                                    with open(args.output, 'a') as f:
-                                        f.write(res+'\n')
                 else:
                     parser.print_help()
                     sys.exit()
             except Exception as e:
                 print(e)
         else:
-            input_urls = list(set(input_urls))
-            complete_urls = []
-            
-            for url in input_urls:
-                full_url = clean_url(url)
-                complete_urls.append(full_url)
-
             try:
-                values = []
-                if args.value_file:
-                    with open(args.value_file, 'r') as file:
-                        values = file.readlines()
-                    values = [line.replace('\n', '') for line in values]
-
-                if args.value:
-                    for payload in args.value:
-                        values.append(payload)
+                input_urls = list(set(input_urls))
+                complete_urls = []
+                
+                for url in input_urls:
+                    full_url = clean_url(url)
+                    complete_urls.append(full_url)
                     
-                lines = []           
-                if args.parameters != "":
-                    with open(args.parameters, 'r') as file:
-                        lines = file.readlines()
-
-                    lines = [line.replace('\n', '') for line in lines]
-
-                    start = 0
-                    end = len(lines)
-                    step = args.chunk
-                    for i in range(start, end, step):
-                        x = i
-                        generators(complete_urls, values, lines[x:x+step])
-                else:
-                    generators(complete_urls, values, lines)
-                        
-                if len(results) > 0:
-                    results = list(set(results))
-
-                    # Output
-                    if args.output == '':
-                        for res in results:
-                            if res:
-                                print(res)
-                    else:
-                        for res in results:
-                            if res:
-                                print(res)
-                                with open(args.output, 'a') as f:
-                                    f.write(res+'\n')
+                run(complete_urls)
             except Exception as e:
                 print(e)
     else:
