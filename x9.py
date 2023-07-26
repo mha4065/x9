@@ -223,6 +223,7 @@ class Combine:
         if self.parameters:
             for payload in self.payload:
                 self.update_url_parameters(new_url, payload)
+                break
 
     def combine(self):
         try:
